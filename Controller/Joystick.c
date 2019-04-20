@@ -177,7 +177,11 @@ int portsval = 0;
 void GetNextReport(USB_JoystickReport_Input_t* const ReportData) {
 
 	// Prepare an empty report
-	memset(ReportData, 0, sizeof(USB_JoystickReport_Input_t));
+	memset(ReportData, 0, sizeof(USB_JoystickReport_Input_t));	
+	ReportData->LX = STICK_CENTER;
+	ReportData->LY = STICK_CENTER;
+	ReportData->RX = STICK_CENTER;
+	ReportData->RY = STICK_CENTER;
 	ReportData->HAT = HAT_CENTER;
 
 	// Repeat ECHOES times the last report
@@ -193,40 +197,40 @@ void GetNextReport(USB_JoystickReport_Input_t* const ReportData) {
 	{
 
 		case SYNC_CONTROLLER:
-			state = BREATHE;
+			if (report_count > 550)
+			{
+				report_count = 0;
+				state = SYNC_POSITION;
+			}
+			else if (report_count == 250 || report_count == 300 || report_count == 325)
+			{
+				ReportData->Button |= SWITCH_L | SWITCH_R;
+			}
+			else if (report_count == 350 || report_count == 375 || report_count == 400)
+			{
+				ReportData->Button |= SWITCH_A;
+			}
+			else
+			{
+				ReportData->Button = 0;
+				ReportData->LX = STICK_CENTER;
+				ReportData->LY = STICK_CENTER;
+				ReportData->RX = STICK_CENTER;
+				ReportData->RY = STICK_CENTER;
+				ReportData->HAT = HAT_CENTER;
+			}
+			report_count++;
 			break;
-
-		// case SYNC_CONTROLLER:
-		// 	if (report_count > 550)
-		// 	{
-		// 		report_count = 0;
-		// 		state = SYNC_POSITION;
-		// 	}
-		// 	else if (report_count == 250 || report_count == 300 || report_count == 325)
-		// 	{
-		// 		ReportData->Button |= SWITCH_L | SWITCH_R;
-		// 	}
-		// 	else if (report_count == 350 || report_count == 375 || report_count == 400)
-		// 	{
-		// 		ReportData->Button |= SWITCH_A;
-		// 	}
-		// 	else
-		// 	{
-		// 		ReportData->Button = 0;
-		// 		ReportData->LX = STICK_CENTER;
-		// 		ReportData->LY = STICK_CENTER;
-		// 		ReportData->RX = STICK_CENTER;
-		// 		ReportData->RY = STICK_CENTER;
-		// 		ReportData->HAT = HAT_CENTER;
-		// 	}
-		// 	report_count++;
-		// 	break;
 
 		case SYNC_POSITION:
 			bufindex = 0;
 
 
-			ReportData->Button = 0;
+			ReportData->Button = 0;			
+			ReportData->LX = STICK_CENTER;
+			ReportData->LY = STICK_CENTER;
+			ReportData->RX = STICK_CENTER;
+			ReportData->RY = STICK_CENTER;
 			ReportData->HAT = HAT_CENTER;
 
 
@@ -239,23 +243,20 @@ void GetNextReport(USB_JoystickReport_Input_t* const ReportData) {
 
 		case PROCESS:
 
-			if(PIND & (1<<0)) {
+			if(PINC & (1<<1)) {
 				ReportData->HAT = HAT_LEFT;
 			}
-			if(PIND & (1<<1)) {
+			if(PINC & (1<<2)) {
 				ReportData->HAT = HAT_RIGHT;
 			}
-			if(PIND & (1<<2)) {
+			if(PINC & (1<<3)) {
 				ReportData->HAT = HAT_TOP;
 			}
-			if(PIND & (1<<3)) {
-				ReportData->HAT = HAT_BOTTOM;
-			}
-			if(PIND & (1<<4)) {
+			if(PINC & (1<<4)) {
 				ReportData->Button |= SWITCH_A;
 			}
-			if(PIND & (1<<5)) {
-				ReportData->Button |= SWITCH_B;
+			if(PINC & (1<<5)) {
+				ReportData->RY = STICK_MAX;
 			}
 			break;
 
